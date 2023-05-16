@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Consulta de Marcas e Modelos de Carro</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <style>
+    .container {
+      margin-top: 50px;
+    }
+
+    .fipe-info {
+      display: none;
+      margin-top: 50px;
+      text-align: center;
+      width: 100%;
+      padding: 20px 0 20px 0;
+
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Consulta de Marcas e Modelos de Carro</h2>
+
+    <!-- FABRICANTE / MARCA -->
+    <div class="form-group">
+      <label for="marcas">Selecione a marca do carro:</label>
+      <select class="form-control" id="marcas" onchange="buscarModelos()">
+        <option value="">Selecione o fabricante...</option>
+      </select>
+    </div>
+
+    <!-- MODELO -->
+    <div class="form-group">
+      <label for="modelos">Modelos:</label>
+      <select class="form-control" id="modelos" disabled onchange="buscarAnos()">
+        <option value="">Selecione o modelo...</option>
+      </select>
+    </div>
+
+    <!-- ANO -->
+    <div class="form-group">
+      <label for="anos">Anos:</label>
+      <select class="form-control" id="anos" disabled onchange="mostrarFipeInfo()">
+        <option value="">Selecione o ano...</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- RESULTADO -->
+  <div class="fipe-info container jumbotron">
+    <h4>Informações</h4>
+    <table class="table table-striped">
+      <tr>
+        <td><span id="tipoVeiculo"></span></td>
+      </tr>
+      <tr>
+        <td><span id="marca"></span></td>
+      </tr>
+      <tr>
+        <td><span id="modelo"></span></td>
+      </tr>
+      <tr>
+        <td><span id="anoModelo"></span></td>
+      </tr>
+      <tr>
+        <td><span id="combustivel"></span></td>
+      </tr>
+      <tr>
+        <td><span id="codigoFipe"></span></td>
+      </tr>
+      <tr>
+        <td><span id="mesReferencia"></span></td>
+      </tr>
+      <tr>
+        <td><span id="valor"></span></td>
+      </tr>
+    </table>
+  </div>
+
+
+  <script>
+
+    //Buscar Fabricante
+    function buscarMarcas() {
+      var url = 'https://parallelum.com.br/fipe/api/v1/carros/marcas';
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          var marcasSelect = document.getElementById('marcas');
+
+          data.forEach(marca => {
+            var option = document.createElement('option');
+            option.value = marca.codigo;
+            option.text = marca.nome;
+            marcasSelect.appendChild(option);
+          });
+        })
+        .catch(error => console.error(error));
+    }
+
+    //Buscar Modelo
+    function buscarModelos() {
+      var marcaCodigo = document.getElementById('marcas').value;
+      var modelosSelect = document.getElementById('modelos');
+      modelosSelect.innerHTML = '<option value="">Carregando...</option>';
+      modelosSelect.disabled = true;
+
+      var url = `https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaCodigo}/modelos`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          modelosSelect.innerHTML = '<option value="">Selecione...</option>';
+
+          data.modelos.forEach(modelo => {
+            var option = document.createElement('option');
+            option.value = modelo.codigo;
+            option.text = modelo.nome;
+            modelosSelect.appendChild(option);
+          });
+
+          modelosSelect.disabled = false;
+        })
+        .catch(error => console.error(error));
+    }
+
+    // Buscar Anos
+    function buscarAnos() {
+      var marcaCodigo = document.getElementById('marcas').value;
+      var modelosSelect = document.getElementById('modelos').value;
+      var anosSelect = document.getElementById('anos');
+
+      anosSelect.innerHTML = '<option value="">Carregando...</option>';
+      anosSelect.disabled = true;
+
+      var url = `https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaCodigo}/modelos/${modelosSelect}/anos`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          anosSelect.innerHTML = '<option value="">Selecione...</option>';
+
+          data.forEach(ano => {
+            var option = document.createElement('option');
+            option.value = ano.codigo;
+            option.text = ano.nome;
+            anosSelect.appendChild(option);
+          });
+
+          anosSelect.disabled = false;
+        })
+        .catch(error => console.error(error));
+    }
+
+    function mostrarFipeInfo() {
+      var fipeInfoDiv = document.querySelector('.fipe-info');
+      fipeInfoDiv.style.display = 'block';
+
+      // Chamar a função fipeInfo() aqui para exibir as informações atualizadas
+      fipeInfo();
+    }
+
+    // Fipe Info
+    function fipeInfo() {
+      var marcaCodigo = document.getElementById('marcas').value;
+      var modelosSelect = document.getElementById('modelos').value;
+      var anosSelect = document.getElementById('anos').value;
+      var fipeResult = "";
+
+      var url = `https://parallelum.com.br/fipe/api/v1/carros/marcas/${marcaCodigo}/modelos/${modelosSelect}/anos/${anosSelect}`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          // Exibir os campos da resposta em tela
+          document.getElementById('tipoVeiculo').textContent = 'Tipo de Veículo: ' + data.TipoVeiculo;
+          document.getElementById('valor').textContent = 'Valor: ' + data.Valor;
+          document.getElementById('marca').textContent = 'Marca: ' + data.Marca;
+          document.getElementById('modelo').textContent = 'Modelo: ' + data.Modelo;
+          document.getElementById('anoModelo').textContent = 'Ano do Modelo: ' + data.AnoModelo;
+          document.getElementById('combustivel').textContent = 'Combustível: ' + data.Combustivel;
+          document.getElementById('codigoFipe').textContent = 'Código FIPE: ' + data.CodigoFipe;
+          document.getElementById('mesReferencia').textContent = 'Mês de Referência: ' + data.MesReferencia;
+          document.getElementById('siglaCombustivel').textContent = 'Sigla do Combustível: ' + data.SiglaCombustivel;
+        })
+        .catch(error => console.error(error));
+    }
+
+
+
+    // Buscar os fabricantes/marcas ao carregar a página
+    window.addEventListener('DOMContentLoaded', function () {
+      buscarMarcas();
+    });
+  </script>
+</body>
+
+</html>
